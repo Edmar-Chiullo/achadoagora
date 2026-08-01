@@ -1,0 +1,141 @@
+"use server";
+
+import { revalidatePath } from "next/cache";
+import { redirect } from "next/navigation";
+import { prisma } from "@/lib/prisma";
+import { requireAdmin } from "@/lib/auth-utils";
+import { slugify } from "@/lib/slug";
+import { productSchema, parseProductForm } from "@/lib/validations/product";
+
+export type ActionResult = {
+  error?: string;
+  fieldErrors?: Record<string, string[] | undefined>;
+};
+
+async function uniqueProductSlug(base: string, excludeId?: string) {
+  let slug = base;
+  let n = 2;
+  for (;;) {
+    const existing = await prisma.product.findUnique({
+      where: { slug },
+      select: { id: true },
+    });
+    if (!existing || (excludeId && existing.id === excludeId)) return slug;
+    slug = `${base}-${n++}`;
+  }
+}
+
+export async function createProduct(formData: FormData): Promise<ActionResult> {
+  await requireAdmin();
+
+  const input = parseProductForm(formData);
+  const parsed = productSchema.safeParse(input);
+
+  if (!parsed.success) {
+    return {
+      error: "Verifique os campos abaixo.",
+      fieldErrors: parsed.error.flatten().fieldErrors,
+    };
+  }
+
+  const data = parsed.data;
+  const baseSlug = data.slug || slugify(data.title);
+  const slug = await uniqueProductSlug(baseSlug);
+
+  await prisma.product.create({
+    data: {
+      title: data.title,
+      slug,
+      description: data.description || null,
+      image: data.image || null,
+      price: data.price,
+      categoryId: data.categoryId,
+      platform: data.platform,
+      affiliateLink: data.affiliateLink,
+      status: data.status,
+      featured: data.featured,
+    },
+  });
+
+  revalidatePath("/", "layout");
+  redirect("/admin/produtos");
+}
+
+export async function updateProduct(
+  id: string,
+  formData: FormData
+): Promise<ActionResult> {
+  await requireAdmin();
+
+  const existing = await prisma.product.findUnique({ where: { id } });
+  if (!existing) {
+    return { error: "Produto não encontrado." };
+  }
+
+  const parsed = productSchema.safeParse(parseProductForm(formData));
+  if (!parsed.success) {
+    return {
+      error: "Verifique os campos abaixo.",
+      fieldErrors: parsed.error.flatten().fieldErrors,
+    };
+  }
+
+  const data = parsed.data;
+  const baseSlug = data.slug || slugify(data.title);
+  const slug = await uniqueProductSlug(baseSlug, id);
+
+  await prisma.product.update({
+    where: { id },
+    data: {
+      title: data.title,
+      slug,
+      description: data.description || null,
+      image: data.image || null,
+      price: data.price,
+      categoryId: data.categoryId,
+      platform: data.platform,
+      affiliateLink: data.affiliateLink,
+      status: data.status,
+      featured: data.featured,
+    },
+  });
+
+  revalidatePath("/", "layout");
+  redirect("/admin/produtos");
+}
+
+export async function toggleProductStatus(id: string) {
+  await requireAdmin();
+
+  const product = await prisma.product.findUnique({ where: { id } });
+  if (!product) return;
+
+  await prisma.product.update({
+    where: { id },
+    data: { status: product.status === "ACTIVE" ? "INACTIVE" : "ACTIVE" },
+  });
+
+  revalidatePath("/", "layout");
+}
+
+export async function toggleProductFeatured(id: string) {
+  await requireAdmin();
+
+  const product = await prisma.product.findUnique({ where: { id } });
+  if (!product) return;
+
+  await prisma.product.update({
+    where: { id },
+    data: { featured: !product.featured },
+  });
+
+  revalidatePath("/", "layout");
+}
+
+export async function deleteProduct(id: string) {
+  await requireAdmin();
+
+  await prisma.product.delete({ where: { id } });
+
+  revalidatePath("/", "layout");
+}

@@ -1,0 +1,368 @@
+1. Objetivo do produto
+Criar uma aplicação web responsiva que centralize produtos recomendados por meio de links de afiliados de plataformas como Mercado Livre, Shopee e Hotmart.
+A aplicação terá duas áreas:
+Área pública: apresentação e descoberta dos produtos.
+Área administrativa: cadastro e gerenciamento dos produtos.
+As redes sociais serão o principal canal de aquisição de tráfego.
+Instagram
+TikTok
+Facebook
+YouTube
+        ↓
+Página pública
+        ↓
+Categoria / Produto
+        ↓
+Clique
+        ↓
+Link de afiliado
+        ↓
+Marketplace
+        ↓
+Possível comissão
+
+2. Escopo do MVP
+Área pública
+Home
+A página inicial deverá apresentar:
+Logo/nome da marca.
+Banner ou chamada principal.
+Lista de produtos.
+Categorias.
+Campo de busca.
+Produtos em destaque.
+Produtos recentes.
+Footer.
+Card do produto
+Cada card deverá apresentar:
+Imagem.
+Título.
+Categoria.
+Plataforma/origem.
+Descrição curta.
+Preço, quando disponível.
+Botão "Ver produto".
+
+3. Categorias
+O administrador poderá criar categorias.
+Exemplos:
+Todos
+Casa
+Ferramentas
+Tecnologia
+Moda
+Automotivo
+Eletrônicos
+Cursos
+Ofertas
+O usuário poderá filtrar os produtos por categoria.
+
+4. Produto
+Dados obrigatórios
+Produto
+├── id
+├── título
+├── slug
+├── descrição
+├── imagem
+├── categoria
+├── plataforma
+├── linkAfiliado
+├── status
+├── destaque
+├── createdAt
+└── updatedAt
+Plataforma
+Inicialmente:
+Mercado Livre
+Shopee
+Hotmart
+Outro
+
+5. Página individual
+Eu recomendo incluir isso já no MVP, mesmo que seja simples.
+Exemplo:
+seudominio.com/produto/furadeira-impacto
+Ela poderá apresentar:
+Imagem.
+Título.
+Descrição.
+Categoria.
+Plataforma.
+Informações adicionais.
+Botão "Ver oferta".
+O botão levará para o link de afiliado.
+Por que isso é importante?
+Porque você não depende exclusivamente da Home.
+Cada produto possui uma URL própria que pode ser compartilhada:
+Instagram
+TikTok
+Google
+WhatsApp
+Facebook
+E futuramente pode receber tráfego orgânico do Google.
+
+6. Administração
+A área administrativa será protegida por autenticação.
+/admin
+Dashboard
+Inicialmente:
+Total de produtos.
+Produtos ativos.
+Produtos destacados.
+Total de cliques.
+Cliques por plataforma.
+Não precisamos de um BI complexo.
+
+7. CRUD de produtos
+Criar
+Campos:
+Imagem.
+Título.
+Descrição.
+Categoria.
+Plataforma.
+Link de afiliado.
+Destaque.
+Status.
+Editar
+Alteração dos mesmos campos.
+Excluir
+Excluir produto com confirmação.
+Ativar/desativar
+Permitir ocultar um produto sem apagá-lo.
+
+8. CRUD de categorias
+Administrador poderá:
+Criar.
+Editar.
+Excluir.
+Ativar/desativar.
+Estrutura:
+Categoria
+├── id
+├── nome
+├── slug
+├── descrição
+├── imagem
+├── status
+└── createdAt
+
+9. Rastreamento de cliques
+Essa é uma funcionalidade que eu considero obrigatória, porque transforma sua página em uma ferramenta de aprendizado.
+Quando o usuário clicar:
+Ver oferta
+     ↓
+/go/produto-slug
+     ↓
+Registrar clique
+     ↓
+Lê a URL de destino
+     ↓
+Redirecionar
+     ↓
+Mercado Livre / Shopee / Hotmart
+Você poderá registrar:
+click
+├── productId
+├── platform
+├── source
+├── createdAt
+└── userAgent
+Não precisamos armazenar dados pessoais desnecessários.
+
+10. UTM
+Você poderá divulgar links diferentes nas redes sociais.
+Exemplo:
+?utm_source=instagram
+ou:
+?utm_source=tiktok
+ou:
+?utm_source=facebook
+Assim conseguimos saber:
+"TikTok trouxe 800 visitantes e Instagram trouxe 300."
+Isso será muito útil para decidir onde concentrar seu esforço.
+
+11. SEO
+Desde o primeiro lançamento:
+Metadata dinâmica.
+Open Graph.
+Twitter/X Cards.
+Sitemap.
+Robots.txt.
+URLs amigáveis.
+Schema.org quando fizer sentido.
+alt nas imagens.
+Títulos e descrições únicos.
+Exemplo:
+/roduto/furadeira-de-impacto
+é muito melhor que:
+/product?id=123
+
+12. Responsividade
+Mobile First.
+A maior parte do tráfego provavelmente virá de:
+Instagram.
+TikTok.
+Facebook.
+Portanto, a experiência mobile deve ser prioridade.
+
+13. Requisitos não funcionais
+Performance
+Lighthouse alto.
+Imagens otimizadas.
+Lazy loading.
+Cache quando apropriado.
+Segurança
+Área administrativa protegida.
+Validação com Zod.
+Sanitização de dados.
+Controle de autorização.
+Variáveis sensíveis no ambiente.
+Disponibilidade
+Hospedagem na Vercel.
+Banco PostgreSQL no Neon.
+
+14. Stack do MVP
+Eu simplificaria para:
+Frontend / Backend
+Next.js
+React
+TypeScript
+UI
+Tailwind CSS
+Shadcn UI
+Banco
+PostgreSQL
+Neon
+ORM
+Prisma
+Autenticação
+Auth.js
+Hospedagem
+Vercel
+Analytics
+PostHog
+Monitoramento
+Sentry
+É suficiente.
+
+15. O que NÃO entra no MVP
+Isso é muito importante.
+Eu colocaria explicitamente fora do escopo:
+❌ Marketplace próprio
+❌ Checkout próprio
+❌ Carrinho
+❌ Sistema de pagamento
+❌ Estoque
+❌ Integração automática com Mercado Livre
+❌ Integração automática com Shopee
+❌ Integração automática com Hotmart
+❌ Editor visual
+❌ IA
+❌ Aplicativo Android
+❌ WhatsApp automático
+❌ Sistema de usuários públicos
+❌ Comentários
+❌ Avaliações
+Você está indicando produtos, não administrando uma loja.
+
+16. Arquitetura
+Eu começaria com uma aplicação Next.js única.
+app/
+│
+├── (public)/
+│   ├── page.tsx
+│   ├── categoria/
+│   └── produto/
+│
+├── admin/
+│   ├── login/
+│   ├── dashboard/
+│   ├── produtos/
+│   └── categorias/
+│
+├── go/
+│   └── [slug]/
+│
+└── api/
+E:
+lib/
+├── prisma/
+├── auth/
+├── analytics/
+└── validations/
+components/
+├── ui/
+├── product/
+├── category/
+└── admin/
+
+17. Modelo de dados
+Eu começaria com apenas três entidades principais.
+User
+Category
+Product
+Click
+Relacionamento:
+User
+ │
+ │ administra
+ ▼
+Product ────── Category
+   │
+   │
+   ▼
+ Click
+
+18. Plano de desenvolvimento
+Sprint 1 — Fundação
+Criar projeto.
+Configurar TypeScript.
+Tailwind.
+Shadcn.
+ESLint.
+Prisma.
+Neon.
+Git.
+Vercel.
+
+Sprint 2 — Banco + autenticação
+Modelagem.
+Prisma migrations.
+Auth.js.
+Usuário administrador.
+Proteção /admin.
+
+Sprint 3 — Área administrativa
+Dashboard.
+CRUD categorias.
+CRUD produtos.
+Upload/imagem.
+Ativar/desativar.
+Destaque.
+
+Sprint 4 — Página pública
+Home.
+Cards.
+Categorias.
+Busca.
+Página individual.
+Responsividade.
+
+Sprint 5 — Afiliados + Analytics 
+Redirect /go.
+Registro de cliques.
+UTM.
+PostHog.
+Dashboard básico.
+
+Sprint 6 — SEO + lançamento
+Metadata.
+Sitemap.
+Robots.
+Open Graph.
+Performance.
+Sentry.
+Deploy.
+Domínio.
