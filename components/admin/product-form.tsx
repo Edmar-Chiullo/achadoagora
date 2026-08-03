@@ -3,8 +3,7 @@
 import * as React from "react";
 import { useActionState } from "react";
 import { Wand2 } from "lucide-react";
-import type { Category } from "@/app/generated/prisma/client";
-import { PLATFORM_META } from "@/lib/constants";
+import type { Category, Platform } from "@/app/generated/prisma/client";
 import { slugify } from "@/lib/slug";
 import type { ActionResult } from "@/lib/actions/products";
 import { Button } from "@/components/ui/button";
@@ -21,7 +20,7 @@ export interface ProductFormData {
   image: string;
   price: string;
   categoryId: string;
-  platform: string;
+  platformId: string;
   affiliateLink: string;
   status: "ACTIVE" | "INACTIVE";
   featured: boolean;
@@ -30,13 +29,17 @@ export interface ProductFormData {
 interface ProductFormProps {
   action: (formData: FormData) => Promise<ActionResult>;
   categories: Category[];
+  platforms: Platform[];
   initialData?: ProductFormData;
 }
 
-function ProductForm({ action, categories, initialData }: ProductFormProps) {
+function ProductForm({ action, categories, platforms, initialData }: ProductFormProps) {
   const [title, setTitle] = React.useState(initialData?.title ?? "");
   const [slug, setSlug] = React.useState(initialData?.slug ?? "");
   const [slugTouched, setSlugTouched] = React.useState(Boolean(initialData));
+
+  const defaultPlatformId =
+    platforms.find((platform) => platform.slug === "outro")?.id ?? "";
 
   const wrappedAction = React.useCallback(
     (_prev: ActionResult, formData: FormData) => action(formData),
@@ -186,21 +189,21 @@ function ProductForm({ action, categories, initialData }: ProductFormProps) {
         </div>
 
         <div className="space-y-2">
-          <Label htmlFor="platform">Plataforma *</Label>
+          <Label htmlFor="platformId">Plataforma *</Label>
           <Select
-            id="platform"
-            name="platform"
-            defaultValue={initialData?.platform || "OUTRO"}
+            id="platformId"
+            name="platformId"
+            defaultValue={initialData?.platformId ?? defaultPlatformId}
             required
           >
-            {Object.entries(PLATFORM_META).map(([value, meta]) => (
-              <option key={value} value={value}>
-                {meta.label}
+            {platforms.map((platform) => (
+              <option key={platform.id} value={platform.id}>
+                {platform.name}
               </option>
             ))}
           </Select>
-          {fieldError("platform") ? (
-            <p className="text-sm text-destructive">{fieldError("platform")}</p>
+          {fieldError("platformId") ? (
+            <p className="text-sm text-destructive">{fieldError("platformId")}</p>
           ) : null}
         </div>
 

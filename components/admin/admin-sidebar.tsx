@@ -7,6 +7,7 @@ import {
   LayoutDashboard,
   LogOut,
   Package,
+  Store,
   Tags,
 } from "lucide-react";
 import { signOutAction } from "@/lib/actions/auth";
@@ -16,6 +17,7 @@ import { cn } from "@/lib/utils";
 const links = [
   { href: "/admin/dashboard", label: "Dashboard", icon: LayoutDashboard },
   { href: "/admin/produtos", label: "Produtos", icon: Package },
+  { href: "/admin/plataformas", label: "Plataformas", icon: Store },
   { href: "/admin/categorias", label: "Categorias", icon: Tags },
 ];
 

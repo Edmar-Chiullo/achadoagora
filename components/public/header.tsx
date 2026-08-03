@@ -5,9 +5,7 @@ import Link from "next/link";
 import { Menu, Search, X } from "lucide-react";
 import type { Category } from "@/app/generated/prisma/client";
 import { Logo } from "@/components/public/logo";
-import { buttonVariants } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { cn } from "@/lib/utils";
 
 interface HeaderProps {
   categories: Category[];
@@ -102,12 +100,6 @@ function Header({ categories }: HeaderProps) {
                 ))}
               </div>
             </div>
-            <Link
-              href="/admin/login"
-              className={cn(buttonVariants({ variant: "outline", size: "sm" }), "mt-4 w-full")}
-            >
-              Área administrativa
-            </Link>
           </nav>
         </div>
       ) : null}

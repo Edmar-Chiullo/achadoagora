@@ -12,6 +12,7 @@ export async function GET(
 
   const product = await prisma.product.findFirst({
     where: { slug, status: "ACTIVE" },
+    include: { platform: { select: { slug: true } } },
   });
 
   if (!product) {
@@ -28,7 +29,7 @@ export async function GET(
   await prisma.click.create({
     data: {
       productId: product.id,
-      platform: product.platform,
+      platform: product.platform.slug,
       source,
       userAgent,
     },

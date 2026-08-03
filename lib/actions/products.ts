@@ -25,6 +25,13 @@ async function uniqueProductSlug(base: string, excludeId?: string) {
   }
 }
 
+async function validatePlatform(platformId: string, requireActive: boolean) {
+  const platform = await prisma.platform.findUnique({ where: { id: platformId } });
+  if (!platform) return null;
+  if (requireActive && platform.status !== "ACTIVE") return null;
+  return platform;
+}
+
 export async function createProduct(formData: FormData): Promise<ActionResult> {
   await requireAdmin();
 
@@ -39,6 +46,11 @@ export async function createProduct(formData: FormData): Promise<ActionResult> {
   }
 
   const data = parsed.data;
+  const platform = await validatePlatform(data.platformId, true);
+  if (!platform) {
+    return { error: "Plataforma inválida ou inativa." };
+  }
+
   const baseSlug = data.slug || slugify(data.title);
   const slug = await uniqueProductSlug(baseSlug);
 
@@ -50,7 +62,7 @@ export async function createProduct(formData: FormData): Promise<ActionResult> {
       image: data.image || null,
       price: data.price,
       categoryId: data.categoryId,
-      platform: data.platform,
+      platformId: platform.id,
       affiliateLink: data.affiliateLink,
       status: data.status,
       featured: data.featured,
@@ -81,6 +93,11 @@ export async function updateProduct(
   }
 
   const data = parsed.data;
+  const platform = await validatePlatform(data.platformId, false);
+  if (!platform) {
+    return { error: "Plataforma inválida." };
+  }
+
   const baseSlug = data.slug || slugify(data.title);
   const slug = await uniqueProductSlug(baseSlug, id);
 
@@ -93,7 +110,7 @@ export async function updateProduct(
       image: data.image || null,
       price: data.price,
       categoryId: data.categoryId,
-      platform: data.platform,
+      platformId: platform.id,
       affiliateLink: data.affiliateLink,
       status: data.status,
       featured: data.featured,

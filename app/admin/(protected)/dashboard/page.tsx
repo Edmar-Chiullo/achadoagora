@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { Activity, MousePointerClick, Package, Star } from "lucide-react";
-import { getDashboardStats } from "@/lib/data/admin";
-import { PLATFORM_META } from "@/lib/constants";
+import { getDashboardStats, getAllPlatforms } from "@/lib/data/admin";
+import { platformBadgeClass } from "@/lib/constants";
 import { formatDate, formatNumber } from "@/lib/format";
 import { PageHeader } from "@/components/admin/page-header";
 import { StatCard } from "@/components/admin/stat-card";
@@ -26,7 +26,14 @@ import { buttonVariants } from "@/components/ui/button";
 export const dynamic = "force-dynamic";
 
 export default async function DashboardPage() {
-  const stats = await getDashboardStats();
+  const [stats, platforms] = await Promise.all([
+    getDashboardStats(),
+    getAllPlatforms(),
+  ]);
+
+  const platformBySlug = new Map(
+    platforms.map((platform) => [platform.slug, platform])
+  );
 
   const totalPlatformClicks = stats.clicksByPlatform.reduce(
     (acc, item) => acc + item._count._all,
@@ -87,7 +94,7 @@ export default async function DashboardPage() {
               stats.clicksByPlatform.map((item) => {
                 const count = item._count._all;
                 const percentage = Math.round((count / totalPlatformClicks) * 100);
-                const label = PLATFORM_META[item.platform]?.label ?? item.platform;
+                const label = platformBySlug.get(item.platform)?.name ?? item.platform;
                 return (
                   <div key={item.platform}>
                     <div className="mb-1 flex items-center justify-between text-sm">
@@ -176,11 +183,11 @@ export default async function DashboardPage() {
                     </TableCell>
                     <TableCell>
                       <Badge
-                        className={
-                          PLATFORM_META[click.platform]?.badge ?? "bg-gray-100"
-                        }
+                        className={platformBadgeClass(
+                          platformBySlug.get(click.platform)?.badgeKey
+                        )}
                       >
-                        {PLATFORM_META[click.platform]?.label ?? click.platform}
+                        {platformBySlug.get(click.platform)?.name ?? click.platform}
                       </Badge>
                     </TableCell>
                     <TableCell>{click.source ?? "—"}</TableCell>

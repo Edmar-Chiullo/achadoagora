@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { getAllCategories, getAdminProductById } from "@/lib/data/admin";
+import { getAllCategories, getAllPlatforms, getAdminProductById } from "@/lib/data/admin";
 import { updateProduct } from "@/lib/actions/products";
 import { PageHeader } from "@/components/admin/page-header";
 import { ProductForm, type ProductFormData } from "@/components/admin/product-form";
@@ -17,7 +17,10 @@ export default async function EditProductPage({
   const product = await getAdminProductById(id);
   if (!product) notFound();
 
-  const categories = await getAllCategories();
+  const [categories, platforms] = await Promise.all([
+    getAllCategories(),
+    getAllPlatforms(),
+  ]);
 
   const initialData: ProductFormData = {
     title: product.title,
@@ -26,7 +29,7 @@ export default async function EditProductPage({
     image: product.image ?? "",
     price: product.price != null ? String(product.price) : "",
     categoryId: product.categoryId ?? "",
-    platform: product.platform,
+    platformId: product.platformId,
     affiliateLink: product.affiliateLink,
     status: product.status,
     featured: product.featured,
@@ -51,6 +54,7 @@ export default async function EditProductPage({
         <ProductForm
           action={action}
           categories={categories}
+          platforms={platforms}
           initialData={initialData}
         />
       </div>

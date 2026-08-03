@@ -33,7 +33,7 @@ export default async function HomePage() {
           </h1>
           <p className="max-w-xl text-muted-foreground sm:text-lg">
             Curadoria de produtos e ofertas recomendados com links diretos para
-            Mercado Livre, Shopee e Hotmart.
+            as melhores plataformas parceiras.
           </p>
           <SearchBar />
         </div>

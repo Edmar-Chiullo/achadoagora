@@ -1,14 +1,13 @@
-import type { Platform } from "@/app/generated/prisma/client";
-import { PLATFORM_META } from "@/lib/constants";
+import { platformBadgeClass } from "@/lib/constants";
 import { Badge } from "@/components/ui/badge";
 
 interface PlatformBadgeProps {
-  platform: Platform;
+  platform: { name: string; badgeKey?: string | null } | null;
 }
 
 function PlatformBadge({ platform }: PlatformBadgeProps) {
-  const meta = PLATFORM_META[platform];
-  return <Badge className={meta.badge}>{meta.label}</Badge>;
+  if (!platform) return null;
+  return <Badge className={platformBadgeClass(platform.badgeKey)}>{platform.name}</Badge>;
 }
 
 export { PlatformBadge };

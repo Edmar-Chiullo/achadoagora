@@ -1,5 +1,4 @@
 import { z } from "zod";
-import { PLATFORM_VALUES } from "@/lib/constants";
 
 export const STATUS_VALUES = ["ACTIVE", "INACTIVE"] as const;
 
@@ -33,7 +32,7 @@ export const productSchema = z.object({
     .optional()
     .default(null),
   categoryId: z.union([z.string().min(1, "Categoria inválida"), z.null()]).optional().default(null),
-  platform: z.enum(PLATFORM_VALUES, "Plataforma inválida"),
+  platformId: z.string().min(1, "Selecione a plataforma"),
   affiliateLink: z.url("Link de afiliado inválido").min(5, "Informe o link de afiliado"),
   status: z.enum(["ACTIVE", "INACTIVE"]),
   featured: z.boolean(),
@@ -43,7 +42,6 @@ export type ProductInput = z.infer<typeof productSchema>;
 
 export function parseProductForm(formData: FormData) {
   const price = formData.get("price");
-  const platform = formData.get("platform")?.toString() ?? "OUTRO";
   return {
     title: formData.get("title")?.toString() ?? "",
     slug: formData.get("slug")?.toString() ?? "",
@@ -54,7 +52,7 @@ export function parseProductForm(formData: FormData) {
         ? Number(price.toString().replace(",", "."))
         : null,
     categoryId: formData.get("categoryId")?.toString() || null,
-    platform,
+    platformId: formData.get("platformId")?.toString() ?? "",
     affiliateLink: formData.get("affiliateLink")?.toString() ?? "",
     status: formData.get("status")?.toString() === "INACTIVE" ? "INACTIVE" : "ACTIVE",
     featured: formData.get("featured") === "on",

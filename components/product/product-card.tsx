@@ -1,5 +1,5 @@
 import Link from "next/link";
-import type { Category, Product } from "@/app/generated/prisma/client";
+import type { Category, Platform, Product } from "@/app/generated/prisma/client";
 import { formatPrice, truncate } from "@/lib/format";
 import { Badge } from "@/components/ui/badge";
 import { buttonVariants } from "@/components/ui/button";
@@ -12,7 +12,7 @@ import { PlatformBadge } from "@/components/product/platform-badge";
 import { ProductImage } from "@/components/product/product-image";
 
 interface ProductCardProps {
-  product: Product & { category: Category | null };
+  product: Product & { category: Category | null; platform: Platform };
 }
 
 function ProductCard({ product }: ProductCardProps) {

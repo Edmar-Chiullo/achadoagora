@@ -1,9 +1,16 @@
-import { PrismaClient, Platform } from "../app/generated/prisma/client";
+import { PrismaClient } from "../app/generated/prisma/client";
 import { PrismaPg } from "@prisma/adapter-pg";
 import bcrypt from "bcryptjs";
 
 const adapter = new PrismaPg({ connectionString: process.env.DATABASE_URL });
 const prisma = new PrismaClient({ adapter });
+
+const DEFAULT_PLATFORMS = [
+  { name: "Mercado Livre", slug: "mercado-livre", shortLabel: "ML", badgeKey: "yellow" },
+  { name: "Shopee", slug: "shopee", shortLabel: "SP", badgeKey: "orange" },
+  { name: "Hotmart", slug: "hotmart", shortLabel: "HM", badgeKey: "blue" },
+  { name: "Outro", slug: "outro", shortLabel: "OU", badgeKey: "gray" },
+];
 
 const DEFAULT_CATEGORIES = [
   { name: "Casa", slug: "casa" },
@@ -23,7 +30,7 @@ const SAMPLE_PRODUCTS = [
     description:
       "Furadeira de impacto ideal para pequenos reparos e trabalhos domésticos. Acompanha maleta com acessórios e vem com mandril de 13mm.",
     category: "ferramentas",
-    platform: Platform.MERCADO_LIVRE,
+    platform: "mercado-livre",
     affiliateLink: "https://www.mercadolivre.com.br/",
     price: "189.9",
     image: "https://picsum.photos/seed/furadeira/640/480",
@@ -35,7 +42,7 @@ const SAMPLE_PRODUCTS = [
     description:
       "Cafeteira elétrica com jarra de vidro para até 40 xícaras. Perfeita para receber visitas e facilitar o dia a dia.",
     category: "casa",
-    platform: Platform.SHOPEE,
+    platform: "shopee",
     affiliateLink: "https://shopee.com.br/",
     price: "149.9",
     image: "https://picsum.photos/seed/cafeteira/640/480",
@@ -47,7 +54,7 @@ const SAMPLE_PRODUCTS = [
     description:
       "Caixa de som portátil com 40W de potência, bateria de longa duração e resistente a respingos d'água.",
     category: "eletronicos",
-    platform: Platform.SHOPEE,
+    platform: "shopee",
     affiliateLink: "https://shopee.com.br/",
     price: "129.9",
     image: "https://picsum.photos/seed/caixadesom/640/480",
@@ -59,7 +66,7 @@ const SAMPLE_PRODUCTS = [
     description:
       "Aprenda do zero a divulgar produtos e construir presença digital. Curso com certificado e acesso vitalício.",
     category: "cursos",
-    platform: Platform.HOTMART,
+    platform: "hotmart",
     affiliateLink: "https://hotmart.com/",
     price: "97",
     image: "https://picsum.photos/seed/curso/640/480",
@@ -71,7 +78,7 @@ const SAMPLE_PRODUCTS = [
     description:
       "Conjunto com 6 organizadores para manter sua cozinha limpa e organizada. Fácil instalação.",
     category: "casa",
-    platform: Platform.MERCADO_LIVRE,
+    platform: "mercado-livre",
     affiliateLink: "https://www.mercadolivre.com.br/",
     price: "79.9",
     image: "https://picsum.photos/seed/organizador/640/480",
@@ -83,7 +90,7 @@ const SAMPLE_PRODUCTS = [
     description:
       "Tênis de corrida com amortecimento responsivo e cabedal respirável. Disponível em várias cores e tamanhos.",
     category: "moda",
-    platform: Platform.SHOPEE,
+    platform: "shopee",
     affiliateLink: "https://shopee.com.br/",
     price: "159.9",
     image: "https://picsum.photos/seed/tenis/640/480",
@@ -95,7 +102,7 @@ const SAMPLE_PRODUCTS = [
     description:
       "Multímetro digital com display LCD e função de teste de continuidade. Ideal para eletricistas e hobistas.",
     category: "ferramentas",
-    platform: Platform.MERCADO_LIVRE,
+    platform: "mercado-livre",
     affiliateLink: "https://www.mercadolivre.com.br/",
     price: "89.9",
     image: "https://picsum.photos/seed/multimetro/640/480",
@@ -107,7 +114,7 @@ const SAMPLE_PRODUCTS = [
     description:
       "Suporte magnético para celular no carro com fixação forte e ângulo ajustável. Instalação em segundos.",
     category: "automotivo",
-    platform: Platform.MERCADO_LIVRE,
+    platform: "mercado-livre",
     affiliateLink: "https://www.mercadolivre.com.br/",
     price: "39.9",
     image: "https://picsum.photos/seed/suporte/640/480",
@@ -148,9 +155,31 @@ async function main() {
     console.log(`✓ Categoria: ${created.name}`);
   }
 
+  for (const platform of DEFAULT_PLATFORMS) {
+    const created = await prisma.platform.upsert({
+      where: { slug: platform.slug },
+      update: {
+        name: platform.name,
+        shortLabel: platform.shortLabel,
+        badgeKey: platform.badgeKey,
+      },
+      create: {
+        name: platform.name,
+        slug: platform.slug,
+        shortLabel: platform.shortLabel,
+        badgeKey: platform.badgeKey,
+        status: "ACTIVE",
+      },
+    });
+    console.log(`✓ Plataforma: ${created.name}`);
+  }
+
   for (const sample of SAMPLE_PRODUCTS) {
     const category = await prisma.category.findUnique({
       where: { slug: sample.category },
+    });
+    const platform = await prisma.platform.findUnique({
+      where: { slug: sample.platform },
     });
 
     const created = await prisma.product.upsert({
@@ -163,7 +192,7 @@ async function main() {
         image: sample.image,
         price: sample.price,
         categoryId: category?.id ?? null,
-        platform: sample.platform,
+        platformId: platform?.id ?? "",
         affiliateLink: sample.affiliateLink,
         status: "ACTIVE",
         featured: sample.featured,

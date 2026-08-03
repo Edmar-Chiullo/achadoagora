@@ -7,12 +7,19 @@ export async function getActiveCategories() {
   });
 }
 
+export async function getActivePlatforms() {
+  return prisma.platform.findMany({
+    where: { status: "ACTIVE" },
+    orderBy: { name: "asc" },
+  });
+}
+
 export async function getFeaturedProducts(limit = 8) {
   return prisma.product.findMany({
     where: { status: "ACTIVE", featured: true },
     orderBy: { createdAt: "desc" },
     take: limit,
-    include: { category: true },
+    include: { category: true, platform: true },
   });
 }
 
@@ -21,7 +28,7 @@ export async function getRecentProducts(limit = 8) {
     where: { status: "ACTIVE" },
     orderBy: { createdAt: "desc" },
     take: limit,
-    include: { category: true },
+    include: { category: true, platform: true },
   });
 }
 
@@ -35,14 +42,14 @@ export async function getProductsByCategorySlug(slug: string) {
   return prisma.product.findMany({
     where: { status: "ACTIVE", category: { slug } },
     orderBy: { createdAt: "desc" },
-    include: { category: true },
+    include: { category: true, platform: true },
   });
 }
 
 export async function getProductBySlug(slug: string) {
   return prisma.product.findFirst({
     where: { slug, status: "ACTIVE" },
-    include: { category: true },
+    include: { category: true, platform: true },
   });
 }
 
@@ -58,7 +65,7 @@ export async function searchProducts(query: string, limit = 30) {
     },
     orderBy: { createdAt: "desc" },
     take: limit,
-    include: { category: true },
+    include: { category: true, platform: true },
   });
 }
 

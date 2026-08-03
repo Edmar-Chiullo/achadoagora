@@ -2,7 +2,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { Plus } from "lucide-react";
 import { getAdminProducts } from "@/lib/data/admin";
-import { PLATFORM_META } from "@/lib/constants";
+import { platformBadgeClass } from "@/lib/constants";
 import { formatPrice } from "@/lib/format";
 import { PageHeader } from "@/components/admin/page-header";
 import { ProductActions } from "@/components/admin/product-actions";
@@ -99,11 +99,9 @@ export default async function AdminProductsPage() {
                   </TableCell>
                   <TableCell>
                     <Badge
-                      className={
-                        PLATFORM_META[product.platform]?.badge ?? "bg-gray-100"
-                      }
+                      className={platformBadgeClass(product.platform.badgeKey)}
                     >
-                      {PLATFORM_META[product.platform]?.label ?? product.platform}
+                      {product.platform.name}
                     </Badge>
                   </TableCell>
                   <TableCell className="whitespace-nowrap">
