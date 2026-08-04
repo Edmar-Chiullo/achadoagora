@@ -5,7 +5,10 @@ import { getPublicSitemapData } from "@/lib/data/public";
 export const revalidate = 3600;
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
-  const { categories, products } = await getPublicSitemapData();
+  const { categories, products } = await getPublicSitemapData().catch(() => ({
+    categories: [],
+    products: [],
+  }));
 
   const base = siteConfig.url.replace(/\/$/, "");
 

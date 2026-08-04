@@ -15,9 +15,9 @@ export const revalidate = 60;
 
 export default async function HomePage() {
   const [categories, featured, recent] = await Promise.all([
-    getActiveCategories(),
-    getFeaturedProducts(8),
-    getRecentProducts(8),
+    getActiveCategories().catch(() => []),
+    getFeaturedProducts(8).catch(() => []),
+    getRecentProducts(8).catch(() => []),
   ]);
 
   return (
