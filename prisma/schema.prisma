@@ -81,16 +81,32 @@ model Product {
 }
 
 model Click {
-  id        String   @id @default(cuid())
-  productId String
-  product   Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
-  platform  String
-  source    String?
-  userAgent String?
-  createdAt DateTime @default(now())
+  id          String   @id @default(cuid())
+  productId   String
+  product     Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  platform    String
+  source      String?
+  userAgent   String?
+  ipHash      String?
+  country     String?
+  region      String?
+  city        String?
+  referrer    String?
+  pageUrl     String?
+  utmMedium   String?
+  utmCampaign String?
+  utmTerm     String?
+  utmContent  String?
+  locale      String?
+  browser     String?
+  os          String?
+  deviceType  String?
+  deviceBrand String?
+  createdAt   DateTime @default(now())
 
   @@index([productId])
   @@index([platform])
+  @@index([source])
   @@index([createdAt])
   @@map("clicks")
 }
