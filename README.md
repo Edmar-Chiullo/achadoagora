@@ -8,7 +8,7 @@ Agregador de produtos com links de afiliados (Mercado Livre, Shopee, Hotmart e o
 - **Tailwind CSS v4** (tema via `app/globals.css`)
 - **Prisma 7** + **PostgreSQL** (Neon)
 - **Auth.js v5** (credentials + JWT) — login administrativo
-- **Zod** (validação), **lucide-react**, **PostHog** (opcional)
+- **Zod** (validação), **lucide-react**
 
 ## Como rodar
 
@@ -28,7 +28,6 @@ cp .env.example .env   # preencha com seus valores
 | `AUTH_TRUST_HOST` | `true` para rodar local |
 | `NEXT_PUBLIC_APP_URL` | URL pública (ex.: `http://localhost:3000`) |
 | `ADMIN_EMAIL` / `ADMIN_PASSWORD` | Cria o admin no seed (padrão: `admin@achadinhos.com.br` / `admin123`) |
-| `NEXT_PUBLIC_POSTHOG_KEY` / `NEXT_PUBLIC_POSTHOG_HOST` | PostHog (opcional, pode ficar vazio) |
 
 ### Banco de dados
 
@@ -70,7 +69,7 @@ components/
   product/             # card, grid, imagem, badge de plataforma
   public/              # header, footer, busca, ícones sociais
   admin/               # formulários, ações, sidebar, métricas
-  analytics/           # UTM capture + PostHog
+  analytics/           # UTM capture + monitoramento de visitas
 lib/
   prisma.ts, auth.ts, auth-utils.ts
   data/                # consultas públicas e do admin

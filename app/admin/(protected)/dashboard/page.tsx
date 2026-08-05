@@ -1,8 +1,9 @@
 import Link from "next/link";
-import { Activity, MousePointerClick, Package, Star } from "lucide-react";
+import { Activity, Clock, Eye, MousePointerClick, Package, Star } from "lucide-react";
 import { getDashboardStats, getAllPlatforms } from "@/lib/data/admin";
+import { getVisitDashboardStats } from "@/lib/data/visits";
 import { platformBadgeClass } from "@/lib/constants";
-import { formatDateTime, formatNumber } from "@/lib/format";
+import { formatDateTime, formatDuration, formatNumber } from "@/lib/format";
 import { PageHeader } from "@/components/admin/page-header";
 import { StatCard } from "@/components/admin/stat-card";
 import { ClicksBySource } from "@/components/admin/clicks-by-source";
@@ -27,9 +28,10 @@ import { buttonVariants } from "@/components/ui/button";
 export const dynamic = "force-dynamic";
 
 export default async function DashboardPage() {
-  const [stats, platforms] = await Promise.all([
+  const [stats, platforms, visitStats] = await Promise.all([
     getDashboardStats(),
     getAllPlatforms(),
+    getVisitDashboardStats(),
   ]);
 
   const platformBySlug = new Map(
@@ -77,6 +79,17 @@ export default async function DashboardPage() {
           value={formatNumber(stats.totalClicks)}
           icon={MousePointerClick}
           hint={`${formatNumber(stats.clicksLast7Days)} nos últimos 7 dias`}
+        />
+        <StatCard
+          title="Visitas (7 dias)"
+          value={formatNumber(visitStats.visitsLast7Days)}
+          icon={Eye}
+          hint={`${formatNumber(visitStats.uniqueLast7Days)} visitantes únicos`}
+        />
+        <StatCard
+          title="Tempo médio (7 dias)"
+          value={formatDuration(visitStats.avgDurationLast7Days)}
+          icon={Clock}
         />
       </div>
 

@@ -1,7 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import "./globals.css";
 import { siteConfig } from "@/lib/site";
-import { PostHog } from "@/components/analytics/posthog";
 
 export const metadata: Metadata = {
   metadataBase: new URL(siteConfig.url),
@@ -51,7 +50,6 @@ export default function RootLayout({
   return (
     <html lang="pt-BR">
       <body>
-        <PostHog />
         {children}
       </body>
     </html>

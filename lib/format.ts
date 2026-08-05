@@ -34,6 +34,17 @@ export function formatNumber(value: number): string {
   return value.toLocaleString("pt-BR");
 }
 
+export function formatDuration(seconds: number | null | undefined): string {
+  if (seconds === null || seconds === undefined || seconds < 0) return "—";
+  const total = Math.round(seconds);
+  const h = Math.floor(total / 3600);
+  const m = Math.floor((total % 3600) / 60);
+  const s = total % 60;
+  if (h > 0) return `${h}h ${m}min`;
+  if (m > 0) return `${m}min ${s}s`;
+  return `${s}s`;
+}
+
 export function truncate(text: string | null | undefined, length: number): string {
   if (!text) return "";
   return text.length > length ? `${text.slice(0, length).trimEnd()}…` : text;

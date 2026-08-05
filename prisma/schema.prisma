@@ -110,3 +110,32 @@ model Click {
   @@index([createdAt])
   @@map("clicks")
 }
+
+model Visit {
+  id          String    @id @default(cuid())
+  path        String
+  referrer    String?
+  source      String?
+  utmMedium   String?
+  utmCampaign String?
+  utmTerm     String?
+  utmContent  String?
+  userAgent   String?
+  ipHash      String?
+  vidHash     String?
+  country     String?
+  region      String?
+  city        String?
+  browser     String?
+  os          String?
+  deviceType  String?
+  deviceBrand String?
+  locale      String?
+  duration    Int?
+  createdAt   DateTime  @default(now())
+
+  @@index([createdAt])
+  @@index([path])
+  @@index([source])
+  @@map("visits")
+}

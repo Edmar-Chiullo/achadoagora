@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
+  BarChart3,
   ExternalLink,
   LayoutDashboard,
   LogOut,
@@ -16,6 +17,7 @@ import { cn } from "@/lib/utils";
 
 const links = [
   { href: "/admin/dashboard", label: "Dashboard", icon: LayoutDashboard },
+  { href: "/admin/visitas", label: "Visitas", icon: BarChart3 },
   { href: "/admin/produtos", label: "Produtos", icon: Package },
   { href: "/admin/plataformas", label: "Plataformas", icon: Store },
   { href: "/admin/categorias", label: "Categorias", icon: Tags },
