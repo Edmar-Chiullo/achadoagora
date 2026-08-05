@@ -14,6 +14,8 @@ export function platformBadgeClass(key?: string | null): string {
   return PLATFORM_BADGE_STYLES[key ?? "gray"] ?? PLATFORM_BADGE_STYLES.gray;
 }
 
+export const DIRECT_SOURCE = "__direct__";
+
 export const DEFAULT_CATEGORIES = [
   { name: "Casa", slug: "casa" },
   { name: "Ferramentas", slug: "ferramentas" },

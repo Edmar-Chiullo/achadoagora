@@ -5,6 +5,7 @@ import { platformBadgeClass } from "@/lib/constants";
 import { formatDateTime, formatNumber } from "@/lib/format";
 import { PageHeader } from "@/components/admin/page-header";
 import { StatCard } from "@/components/admin/stat-card";
+import { ClicksBySource } from "@/components/admin/clicks-by-source";
 import {
   Card,
   CardContent,
@@ -124,27 +125,17 @@ export default async function DashboardPage() {
             </CardDescription>
           </CardHeader>
           <CardContent>
-            {stats.clicksBySource.length === 0 ? (
-              <p className="py-6 text-center text-sm text-muted-foreground">
-                Nenhum clique registrado ainda.
-              </p>
-            ) : (
-              <ul className="divide-y">
-                {stats.clicksBySource.map((item) => (
-                  <li
-                    key={item.source ?? "direct"}
-                    className="flex items-center justify-between py-2.5 text-sm"
-                  >
-                    <Badge variant="secondary">
-                      {item.source ?? "Sem origem (direto)"}
-                    </Badge>
-                    <span className="font-medium">
-                      {formatNumber(item._count._all)} cliques
-                    </span>
-                  </li>
-                ))}
-              </ul>
-            )}
+            <ClicksBySource
+              sources={stats.clicksBySource.map((item) => ({
+                source: item.source,
+                count: item._count._all,
+              }))}
+              platforms={platforms.map((platform) => ({
+                slug: platform.slug,
+                name: platform.name,
+                badgeKey: platform.badgeKey,
+              }))}
+            />
           </CardContent>
         </Card>
       </div>

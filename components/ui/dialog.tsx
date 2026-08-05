@@ -10,9 +10,10 @@ interface DialogProps {
   title: string;
   description?: string;
   children?: React.ReactNode;
+  className?: string;
 }
 
-function Dialog({ open, onOpenChange, title, description, children }: DialogProps) {
+function Dialog({ open, onOpenChange, title, description, children, className }: DialogProps) {
   const ref = React.useRef<HTMLDialogElement>(null);
 
   React.useEffect(() => {
@@ -34,7 +35,8 @@ function Dialog({ open, onOpenChange, title, description, children }: DialogProp
       }}
       onClose={() => onOpenChange(false)}
       className={cn(
-        "m-auto w-full max-w-md rounded-xl border bg-background p-0 shadow-lg backdrop:bg-black/50 backdrop:backdrop-blur-sm open:animate-in"
+        "m-auto w-full max-w-md rounded-xl border bg-background p-0 shadow-lg backdrop:bg-black/50 backdrop:backdrop-blur-sm open:animate-in",
+        className
       )}
     >
       <div className="flex flex-col gap-2 p-6">

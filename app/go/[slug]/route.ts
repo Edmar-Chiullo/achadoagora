@@ -15,6 +15,15 @@ function hashIp(rawIp: string | null): string | null {
   return createHash("sha256").update(`${IP_HASH_SALT}:${ip}`).digest("hex");
 }
 
+function decodeParam(value: string | null): string | null {
+  if (!value || !value.includes("%")) return value;
+  try {
+    return decodeURIComponent(value);
+  } catch {
+    return value;
+  }
+}
+
 function parseDevice(userAgent: string | null) {
   if (!userAgent) return { browser: null, os: null, deviceType: null, deviceBrand: null };
   const result = new UAParser(userAgent).getResult();
@@ -62,9 +71,9 @@ export async function GET(
       source,
       userAgent,
       ipHash: hashIp(rawIp),
-      country: headerList.get("x-vercel-ip-country") || null,
-      region: headerList.get("x-vercel-ip-country-region") || null,
-      city: headerList.get("x-vercel-ip-city") || null,
+      country: decodeParam(headerList.get("x-vercel-ip-country")),
+      region: decodeParam(headerList.get("x-vercel-ip-country-region")),
+      city: decodeParam(headerList.get("x-vercel-ip-city")),
       referrer: headerList.get("referer") || null,
       pageUrl: url.pathname,
       utmMedium: url.searchParams.get("utm_medium"),
