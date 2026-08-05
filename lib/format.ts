@@ -8,11 +8,25 @@ export function formatPrice(value: unknown): string | null {
   });
 }
 
+export const APP_TIME_ZONE = "America/Sao_Paulo";
+
 export function formatDate(date: Date | string): string {
   return new Date(date).toLocaleDateString("pt-BR", {
     day: "2-digit",
     month: "short",
     year: "numeric",
+    timeZone: APP_TIME_ZONE,
+  });
+}
+
+export function formatDateTime(date: Date | string): string {
+  return new Date(date).toLocaleString("pt-BR", {
+    day: "2-digit",
+    month: "2-digit",
+    year: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+    timeZone: APP_TIME_ZONE,
   });
 }
 

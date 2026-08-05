@@ -2,7 +2,7 @@ import Link from "next/link";
 import { Activity, MousePointerClick, Package, Star } from "lucide-react";
 import { getDashboardStats, getAllPlatforms } from "@/lib/data/admin";
 import { platformBadgeClass } from "@/lib/constants";
-import { formatDate, formatNumber } from "@/lib/format";
+import { formatDateTime, formatNumber } from "@/lib/format";
 import { PageHeader } from "@/components/admin/page-header";
 import { StatCard } from "@/components/admin/stat-card";
 import {
@@ -192,7 +192,7 @@ export default async function DashboardPage() {
                     </TableCell>
                     <TableCell>{click.source ?? "—"}</TableCell>
                     <TableCell className="whitespace-nowrap">
-                      {formatDate(click.createdAt)}
+                      {formatDateTime(click.createdAt)}
                     </TableCell>
                   </TableRow>
                 ))}
