@@ -10,9 +10,9 @@ import {
 } from "@/components/public/social-icons";
 
 const socials = [
-  { label: "Instagram", href: "#", icon: InstagramIcon },
+  { label: "Instagram", href: "https://www.instagram.com/acha.doagora/", icon: InstagramIcon },
   { label: "Facebook", href: "#", icon: FacebookIcon },
-  { label: "TikTok", href: "#", icon: TikTokIcon },
+  { label: "TikTok", href: "https://www.tiktok.com/@achadoagorapage", icon: TikTokIcon },
   { label: "YouTube", href: "#", icon: YoutubeIcon },
 ];
 

@@ -2,7 +2,7 @@
 
 import * as React from "react";
 import { useActionState } from "react";
-import { Wand2 } from "lucide-react";
+import { Wand2, Download, CheckCircle2, AlertCircle, Loader2 } from "lucide-react";
 import type { Category, Platform } from "@/app/generated/prisma/client";
 import { slugify } from "@/lib/slug";
 import type { ActionResult } from "@/lib/actions/products";
@@ -26,6 +26,16 @@ export interface ProductFormData {
   featured: boolean;
 }
 
+interface ImportedData {
+  title: string | null;
+  description: string | null;
+  imageUrl: string | null;
+  price: number | null;
+  platform: string | null;
+  confidence: number;
+  missingFields: string[];
+}
+
 interface ProductFormProps {
   action: (formData: FormData) => Promise<ActionResult>;
   categories: Category[];
@@ -37,6 +47,19 @@ function ProductForm({ action, categories, platforms, initialData }: ProductForm
   const [title, setTitle] = React.useState(initialData?.title ?? "");
   const [slug, setSlug] = React.useState(initialData?.slug ?? "");
   const [slugTouched, setSlugTouched] = React.useState(Boolean(initialData));
+  const [importUrl, setImportUrl] = React.useState("");
+  const [importing, setImporting] = React.useState(false);
+  const [importResult, setImportResult] = React.useState<ImportedData | null>(null);
+  const [importError, setImportError] = React.useState<string | null>(null);
+
+  const formRef = React.useRef<HTMLFormElement>(null);
+  const titleRef = React.useRef<HTMLInputElement>(null);
+  const descriptionRef = React.useRef<HTMLTextAreaElement>(null);
+  const imageRef = React.useRef<HTMLInputElement>(null);
+  const priceRef = React.useRef<HTMLInputElement>(null);
+  const platformIdRef = React.useRef<HTMLSelectElement>(null);
+  const sourceTypeRef = React.useRef<HTMLInputElement>(null);
+  const sourceUrlRef = React.useRef<HTMLInputElement>(null);
 
   const defaultPlatformId =
     platforms.find((platform) => platform.slug === "outro")?.id ?? "";
@@ -68,18 +91,174 @@ function ProductForm({ action, categories, platforms, initialData }: ProductForm
     return errors && errors.length > 0 ? errors[0] : null;
   }
 
+  async function handleImport() {
+    if (!importUrl.trim()) return;
+
+    setImporting(true);
+    setImportError(null);
+    setImportResult(null);
+
+    try {
+      const response = await fetch("/api/admin/import", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ url: importUrl.trim() }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        setImportError(data.errorMessage || "Erro ao importar produto.");
+        return;
+      }
+
+      if (data.success && data.data) {
+        const imported: ImportedData = {
+          title: data.data.title,
+          description: data.data.description,
+          imageUrl: data.data.imageUrl,
+          price: data.data.price,
+          platform: data.data.platform,
+          confidence: data.data.confidence,
+          missingFields: data.data.missingFields || [],
+        };
+
+        setImportResult(imported);
+
+        if (imported.title && titleRef.current) {
+          titleRef.current.value = imported.title;
+          setTitle(imported.title);
+          if (!slugTouched) {
+            setSlug(slugify(imported.title));
+          }
+        }
+
+        if (imported.description && descriptionRef.current) {
+          descriptionRef.current.value = imported.description;
+        }
+
+        if (imported.imageUrl && imageRef.current) {
+          imageRef.current.value = imported.imageUrl;
+        }
+
+        if (imported.price !== null && priceRef.current) {
+          priceRef.current.value = String(imported.price);
+        }
+
+        if (imported.platform && platformIdRef.current) {
+          const matchedPlatform = platforms.find(
+            (p) => p.name.toLowerCase() === imported.platform!.toLowerCase()
+          );
+          if (matchedPlatform) {
+            platformIdRef.current.value = matchedPlatform.id;
+          }
+        }
+
+        if (sourceTypeRef.current) {
+          sourceTypeRef.current.value = "IMPORTED";
+        }
+        if (sourceUrlRef.current) {
+          sourceUrlRef.current.value = importUrl.trim();
+        }
+      }
+    } catch {
+      setImportError("Erro de conexão. Verifique sua internet e tente novamente.");
+    } finally {
+      setImporting(false);
+    }
+  }
+
+  function getConfidenceColor(score: number): string {
+    if (score >= 80) return "text-green-600";
+    if (score >= 50) return "text-yellow-600";
+    return "text-red-600";
+  }
+
+  function getConfidenceLabel(score: number): string {
+    if (score >= 80) return "Alta";
+    if (score >= 50) return "Média";
+    return "Baixa";
+  }
+
   return (
-    <form action={formAction} className="space-y-6">
+    <form ref={formRef} action={formAction} className="space-y-6">
       {state.error ? (
         <div className="rounded-md border border-destructive/50 bg-destructive/10 px-4 py-3 text-sm text-destructive">
           {state.error}
         </div>
       ) : null}
 
+      <div className="rounded-md border border-dashed border-primary/30 bg-primary/5 p-4">
+        <div className="flex items-center gap-2 mb-2">
+          <Download className="h-4 w-4 text-primary" />
+          <Label className="font-medium text-primary">Importar por URL</Label>
+        </div>
+        <p className="text-xs text-muted-foreground mb-3">
+          Cole a URL do produto para preencher os campos automaticamente.
+        </p>
+        <div className="flex gap-2">
+          <Input
+            value={importUrl}
+            onChange={(e) => setImportUrl(e.target.value)}
+            placeholder="https://www.mercadolivre.com.br/produto/..."
+            className="flex-1"
+            disabled={importing}
+          />
+          <Button
+            type="button"
+            variant="outline"
+            onClick={handleImport}
+            disabled={importing || !importUrl.trim()}
+          >
+            {importing ? (
+              <>
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                Importando...
+              </>
+            ) : (
+              <>
+                <Download className="mr-2 h-4 w-4" />
+                Importar
+              </>
+            )}
+          </Button>
+        </div>
+
+        {importError && (
+          <div className="mt-3 flex items-center gap-2 text-sm text-destructive">
+            <AlertCircle className="h-4 w-4" />
+            {importError}
+          </div>
+        )}
+
+        {importResult && (
+          <div className="mt-3 rounded-md border border-green-200 bg-green-50 p-3">
+            <div className="flex items-center gap-2 mb-2">
+              <CheckCircle2 className="h-4 w-4 text-green-600" />
+              <span className="text-sm font-medium text-green-800">
+                Produto importado com sucesso
+              </span>
+            </div>
+            <div className="flex items-center gap-2 text-sm">
+              <span className="text-muted-foreground">Confiança:</span>
+              <span className={`font-medium ${getConfidenceColor(importResult.confidence)}`}>
+                {importResult.confidence}% — {getConfidenceLabel(importResult.confidence)}
+              </span>
+            </div>
+            {importResult.missingFields.length > 0 && (
+              <p className="mt-1 text-xs text-muted-foreground">
+                Campos não encontrados: {importResult.missingFields.join(", ")}
+              </p>
+            )}
+          </div>
+        )}
+      </div>
+
       <div className="grid gap-4 sm:grid-cols-2">
         <div className="space-y-2 sm:col-span-2">
           <Label htmlFor="title">Título *</Label>
           <Input
+            ref={titleRef}
             id="title"
             name="title"
             value={title}
@@ -128,6 +307,7 @@ function ProductForm({ action, categories, platforms, initialData }: ProductForm
         <div className="space-y-2 sm:col-span-2">
           <Label htmlFor="description">Descrição</Label>
           <Textarea
+            ref={descriptionRef}
             id="description"
             name="description"
             defaultValue={initialData?.description ?? ""}
@@ -142,6 +322,7 @@ function ProductForm({ action, categories, platforms, initialData }: ProductForm
         <div className="space-y-2">
           <Label htmlFor="image">URL da imagem</Label>
           <Input
+            ref={imageRef}
             id="image"
             name="image"
             type="url"
@@ -156,6 +337,7 @@ function ProductForm({ action, categories, platforms, initialData }: ProductForm
         <div className="space-y-2">
           <Label htmlFor="price">Preço (R$)</Label>
           <Input
+            ref={priceRef}
             id="price"
             name="price"
             type="number"
@@ -191,6 +373,7 @@ function ProductForm({ action, categories, platforms, initialData }: ProductForm
         <div className="space-y-2">
           <Label htmlFor="platformId">Plataforma *</Label>
           <Select
+            ref={platformIdRef}
             id="platformId"
             name="platformId"
             defaultValue={initialData?.platformId ?? defaultPlatformId}
@@ -249,6 +432,8 @@ function ProductForm({ action, categories, platforms, initialData }: ProductForm
       </div>
 
       <div className="flex justify-end gap-2">
+        <input type="hidden" ref={sourceTypeRef} name="sourceType" value="MANUAL" />
+        <input type="hidden" ref={sourceUrlRef} name="sourceUrl" value="" />
         <Button type="submit" disabled={pending}>
           {pending ? "Salvando…" : "Salvar produto"}
         </Button>

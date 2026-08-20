@@ -94,7 +94,7 @@ export default async function HomePage() {
           </p>
           <div className="flex gap-2">
             <Link
-              href="#"
+              href="https://www.instagram.com/acha.doagora/"
               className={buttonVariants()}
               target="_blank"
               rel="noopener noreferrer"
@@ -102,7 +102,7 @@ export default async function HomePage() {
               Instagram
             </Link>
             <Link
-              href="#"
+              href="https://www.tiktok.com/@achadoagorapage"
               className={buttonVariants({ variant: "outline" })}
               target="_blank"
               rel="noopener noreferrer"

@@ -116,7 +116,7 @@ export default async function AdminProductsPage() {
                     </Badge>
                   </TableCell>
                   <TableCell className="text-right">
-                    <ProductActions product={product} />
+                    <ProductActions product={{ id: product.id, status: product.status, featured: product.featured }} />
                   </TableCell>
                 </TableRow>
               ))}

@@ -16,6 +16,19 @@ enum Status {
   INACTIVE
 }
 
+enum SourceType {
+  MANUAL
+  IMPORTED
+}
+
+enum ImportStatus {
+  PENDING
+  PROCESSING
+  SUCCESS
+  PARTIAL
+  FAILED
+}
+
 model Platform {
   id         String    @id @default(cuid())
   name       String
@@ -57,26 +70,29 @@ model Category {
 }
 
 model Product {
-  id            String    @id @default(cuid())
+  id            String     @id @default(cuid())
   title         String
-  slug          String    @unique
+  slug          String     @unique
   description   String?
   image         String?
-  price         Decimal?  @db.Decimal(10, 2)
+  price         Decimal?   @db.Decimal(10, 2)
   categoryId    String?
-  category      Category? @relation(fields: [categoryId], references: [id], onDelete: SetNull)
+  category      Category?  @relation(fields: [categoryId], references: [id], onDelete: SetNull)
   platformId    String
-  platform      Platform  @relation(fields: [platformId], references: [id], onDelete: Restrict)
+  platform      Platform   @relation(fields: [platformId], references: [id], onDelete: Restrict)
   affiliateLink String
-  status        Status    @default(ACTIVE)
-  featured      Boolean   @default(false)
-  createdAt     DateTime  @default(now())
-  updatedAt     DateTime  @updatedAt
+  status        Status     @default(ACTIVE)
+  featured      Boolean    @default(false)
+  sourceType    SourceType @default(MANUAL)
+  sourceUrl     String?
+  createdAt     DateTime   @default(now())
+  updatedAt     DateTime   @updatedAt
   clicks        Click[]
 
   @@index([status])
   @@index([categoryId])
   @@index([platformId])
+  @@index([sourceType])
   @@map("products")
 }
 
@@ -138,4 +154,36 @@ model Visit {
   @@index([path])
   @@index([source])
   @@map("visits")
+}
+
+model ProductImportLog {
+  id               String       @id @default(cuid())
+  sourceUrl        String
+  platform         String?
+  status           ImportStatus @default(PENDING)
+  errorCode        String?
+  errorMessage     String?
+  extractionMethod String?
+  confidence       Float?
+  result           Json?
+  startedAt        DateTime     @default(now())
+  completedAt      DateTime?
+  createdAt        DateTime     @default(now())
+
+  @@index([status])
+  @@index([createdAt])
+  @@map("product_import_logs")
+}
+
+model ImportCache {
+  id        String   @id @default(cuid())
+  urlHash   String   @unique
+  url       String
+  result    Json
+  createdAt DateTime @default(now())
+  expiresAt DateTime
+
+  @@index([urlHash])
+  @@index([expiresAt])
+  @@map("import_cache")
 }

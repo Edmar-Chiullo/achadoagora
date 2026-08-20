@@ -66,6 +66,8 @@ export async function createProduct(formData: FormData): Promise<ActionResult> {
       affiliateLink: data.affiliateLink,
       status: data.status,
       featured: data.featured,
+      sourceType: data.sourceType,
+      sourceUrl: data.sourceUrl || null,
     },
   });
 

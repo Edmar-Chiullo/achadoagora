@@ -1,6 +1,7 @@
 import { z } from "zod";
 
 export const STATUS_VALUES = ["ACTIVE", "INACTIVE"] as const;
+export const SOURCE_TYPE_VALUES = ["MANUAL", "IMPORTED"] as const;
 
 export const productSchema = z.object({
   title: z
@@ -36,6 +37,8 @@ export const productSchema = z.object({
   affiliateLink: z.url("Link de afiliado inválido").min(5, "Informe o link de afiliado"),
   status: z.enum(["ACTIVE", "INACTIVE"]),
   featured: z.boolean(),
+  sourceType: z.enum(["MANUAL", "IMPORTED"]).optional().default("MANUAL"),
+  sourceUrl: z.union([z.url("URL de origem inválida"), z.literal("")]).optional().default(""),
 });
 
 export type ProductInput = z.infer<typeof productSchema>;
@@ -56,5 +59,7 @@ export function parseProductForm(formData: FormData) {
     affiliateLink: formData.get("affiliateLink")?.toString() ?? "",
     status: formData.get("status")?.toString() === "INACTIVE" ? "INACTIVE" : "ACTIVE",
     featured: formData.get("featured") === "on",
+    sourceType: formData.get("sourceType")?.toString() === "IMPORTED" ? "IMPORTED" : "MANUAL",
+    sourceUrl: formData.get("sourceUrl")?.toString() ?? "",
   };
 }
