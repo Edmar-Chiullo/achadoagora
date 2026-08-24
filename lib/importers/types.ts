@@ -20,6 +20,19 @@ export interface ProductImporter {
   import(url: URL): Promise<ImportedProduct>
 }
 
+export interface FetchProfile {
+  userAgent: string
+  headers?: Record<string, string>
+}
+
+export interface ProductAdapter {
+  platform: string
+  hosts: string[]
+  profile: FetchProfile
+  isBlockedPage?(html: string): boolean
+  sanitize?(product: ImportedProduct): ImportedProduct
+}
+
 export interface ImportLogEntry {
   id: string
   sourceUrl: string
@@ -47,6 +60,7 @@ export interface ImportCacheEntry {
 export type ImportErrorCode =
   | "INVALID_URL"
   | "BLOCKED_IP"
+  | "MARKETPLACE_BLOCKED"
   | "FETCH_TIMEOUT"
   | "FETCH_ERROR"
   | "REDIRECT_LIMIT"

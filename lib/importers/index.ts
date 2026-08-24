@@ -4,6 +4,7 @@ import { validateUrl } from "./url-validator"
 import { getCachedImport, setCachedImport } from "./cache"
 import { importFromUrl } from "./generic-importer"
 import { calculateConfidence } from "./confidence"
+import { MarketplaceBlockedError } from "./errors"
 
 export interface ImportResult {
   success: boolean
@@ -62,7 +63,10 @@ export async function importProduct(urlString: string): Promise<ImportResult> {
     let errorCode: ImportErrorCode = "UNKNOWN_ERROR"
     let errorMessage = "Erro ao importar produto. Tente novamente."
 
-    if (error instanceof Error) {
+    if (error instanceof MarketplaceBlockedError) {
+      errorCode = error.code
+      errorMessage = `${error.platform} bloqueou o acesso automatizado a esta página. Tente preencher os dados manualmente ou use outro link do produto.`
+    } else if (error instanceof Error) {
       switch (error.message) {
         case "REDIRECT_LIMIT":
           errorCode = "REDIRECT_LIMIT"

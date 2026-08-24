@@ -1,4 +1,4 @@
-import type { ImportErrorCode } from "./types"
+import type { FetchProfile, ImportErrorCode } from "./types"
 
 export interface UrlValidationResult {
   valid: boolean
@@ -124,8 +124,13 @@ export function validateUrl(input: string): UrlValidationResult {
   return { valid: true, url: parsedUrl }
 }
 
+export const DEFAULT_FETCH_PROFILE: FetchProfile = {
+  userAgent: "AchadinhosBot/1.0 (Product Importer)",
+}
+
 export async function fetchWithProtection(
   url: URL,
+  profile: FetchProfile = DEFAULT_FETCH_PROFILE,
 ): Promise<{ response: Response; redirectCount: number }> {
   let redirectCount = 0
   let currentUrl = url.href
@@ -140,8 +145,9 @@ export async function fetchWithProtection(
       response = await fetch(currentUrl, {
         signal: controller.signal,
         headers: {
-          "User-Agent": "AchadinhosBot/1.0 (Product Importer)",
+          "User-Agent": profile.userAgent,
           Accept: "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
+          ...profile.headers,
         },
         redirect: "manual",
       })

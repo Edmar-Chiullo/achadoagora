@@ -2,6 +2,8 @@ import * as cheerio from "cheerio"
 import type { ImportedProduct } from "./types"
 import { fetchWithProtection } from "./url-validator"
 import { calculateConfidence } from "./confidence"
+import { findAdapter } from "./adapters"
+import { MarketplaceBlockedError } from "./errors"
 
 interface OpenGraphData {
   title?: string
@@ -100,12 +102,34 @@ function parsePrice(priceStr: string | number | undefined): number | null {
   const str = String(priceStr).trim()
   if (!str) return null
 
-  const cleaned = str.replace(/[^\d.,]/g, "").replace(",", ".")
+  const cleaned = str.replace(/[^\d.,]/g, "")
+  if (!/\d/.test(cleaned)) return null
 
-  const match = cleaned.match(/(\d+\.?\d*(?:\.\d{2})?)/)
-  if (!match) return null
+  const hasComma = cleaned.includes(",")
+  const hasDot = cleaned.includes(".")
 
-  const price = parseFloat(match[1])
+  let normalized: string
+
+  if (hasComma && hasDot) {
+    normalized =
+      cleaned.lastIndexOf(",") > cleaned.lastIndexOf(".")
+        ? cleaned.replace(/\./g, "").replace(",", ".")
+        : cleaned.replace(/,/g, "")
+  } else if (hasComma) {
+    const parts = cleaned.split(",")
+    normalized =
+      parts.length === 2 && parts[1].length !== 3
+        ? cleaned.replace(",", ".")
+        : cleaned.replace(/,/g, "")
+  } else {
+    const parts = cleaned.split(".")
+    normalized =
+      parts.length > 2 && parts[1].length === 3
+        ? cleaned.replace(/\./g, "")
+        : cleaned
+  }
+
+  const price = parseFloat(normalized)
   return isNaN(price) ? null : price
 }
 
@@ -181,10 +205,7 @@ function detectPlatform(url: URL, $: cheerio.CheerioAPI): string | null {
   return null
 }
 
-export async function importFromUrl(url: URL): Promise<ImportedProduct> {
-  const { response } = await fetchWithProtection(url)
-
-  const html = await response.text()
+export function parseProductHtml(html: string, url: URL): ImportedProduct {
   const $ = cheerio.load(html)
 
   const ogData = extractOpenGraph($)
@@ -247,9 +268,17 @@ export async function importFromUrl(url: URL): Promise<ImportedProduct> {
     currency = "BRL"
   }
 
-  const additionalImages = extractImages($, undefined).filter(
-    (img) => img !== imageUrl,
-  )
+  const additionalImages: string[] = []
+  const pushImage = (img?: string | null) => {
+    if (!img || img === imageUrl) return
+    if (!additionalImages.includes(img)) additionalImages.push(img)
+  }
+
+  if (jsonLd?.image) {
+    const jsonLdImages = Array.isArray(jsonLd.image) ? jsonLd.image : [jsonLd.image]
+    for (const img of jsonLdImages) pushImage(img)
+  }
+  for (const img of extractImages($, imageUrl ?? undefined)) pushImage(img)
 
   const platform = detectPlatform(url, $)
 
@@ -275,4 +304,28 @@ export async function importFromUrl(url: URL): Promise<ImportedProduct> {
   importedProduct.missingFields = missingFields
 
   return importedProduct
+}
+
+export async function importFromUrl(url: URL): Promise<ImportedProduct> {
+  const adapter = findAdapter(url.hostname)
+  const { response } = await fetchWithProtection(url, adapter?.profile)
+
+  const html = await response.text()
+
+  if (adapter?.isBlockedPage?.(html)) {
+    throw new MarketplaceBlockedError(adapter.platform)
+  }
+
+  let product = parseProductHtml(html, url)
+
+  if (adapter) {
+    product = adapter.sanitize ? adapter.sanitize(product) : product
+    product = { ...product, platform: adapter.platform }
+
+    const { score, missingFields } = calculateConfidence(product)
+    product.confidence = score
+    product.missingFields = missingFields
+  }
+
+  return product
 }
