@@ -3,7 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { prisma } from "@/lib/prisma";
-import { requireAdmin } from "@/lib/auth-utils";
+import { requireUser } from "@/lib/auth-utils";
 import { slugify } from "@/lib/slug";
 import { categorySchema, parseCategoryForm } from "@/lib/validations/category";
 import type { ActionResult } from "@/lib/actions/products";
@@ -22,7 +22,7 @@ async function uniqueCategorySlug(base: string, excludeId?: string) {
 }
 
 export async function createCategory(formData: FormData): Promise<ActionResult> {
-  await requireAdmin();
+  const session = await requireUser();
 
   const parsed = categorySchema.safeParse(parseCategoryForm(formData));
   if (!parsed.success) {
@@ -46,14 +46,14 @@ export async function createCategory(formData: FormData): Promise<ActionResult> 
   });
 
   revalidatePath("/", "layout");
-  redirect("/admin/categorias");
+  redirect(`/admin/${session.user.username}/categorias`);
 }
 
 export async function updateCategory(
   id: string,
   formData: FormData
 ): Promise<ActionResult> {
-  await requireAdmin();
+  const session = await requireUser();
 
   const existing = await prisma.category.findUnique({ where: { id } });
   if (!existing) {
@@ -83,11 +83,11 @@ export async function updateCategory(
   });
 
   revalidatePath("/", "layout");
-  redirect("/admin/categorias");
+  redirect(`/admin/${session.user.username}/categorias`);
 }
 
 export async function toggleCategoryStatus(id: string) {
-  await requireAdmin();
+  await requireUser();
 
   const category = await prisma.category.findUnique({ where: { id } });
   if (!category) return;
@@ -101,7 +101,7 @@ export async function toggleCategoryStatus(id: string) {
 }
 
 export async function deleteCategory(id: string) {
-  await requireAdmin();
+  await requireUser();
 
   await prisma.category.delete({ where: { id } });
 

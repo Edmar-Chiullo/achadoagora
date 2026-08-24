@@ -1,21 +1,7 @@
-import type { Metadata } from "next";
-import { PageHeader } from "@/components/admin/page-header";
-import { VisitsPanel } from "@/components/admin/visits-panel";
+import { redirect } from "next/navigation";
+import { requireUser } from "@/lib/auth-utils";
 
-export const metadata: Metadata = {
-  title: "Visitas",
-};
-
-export const dynamic = "force-dynamic";
-
-export default function VisitsPage() {
-  return (
-    <div>
-      <PageHeader
-        title="Visitas"
-        description="Monitoramento de acesso às páginas públicas: visitas, origem e tempo de permanência."
-      />
-      <VisitsPanel />
-    </div>
-  );
+export default async function VisitasShimPage() {
+  const session = await requireUser();
+  redirect(`/admin/${session.user.username}/visitas`);
 }

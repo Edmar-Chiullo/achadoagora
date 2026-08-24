@@ -16,6 +16,29 @@ export function platformBadgeClass(key?: string | null): string {
 
 export const DIRECT_SOURCE = "__direct__";
 
+export const RESERVED_USERNAMES = [
+  "api",
+  "assets",
+  "banners",
+  "buscar",
+  "categoria",
+  "categorias",
+  "dashboard",
+  "go",
+  "login",
+  "manual",
+  "perfil",
+  "plataformas",
+  "produto",
+  "produtos",
+  "public",
+  "static",
+  "usuarios",
+  "visitas",
+];
+
+export const USERNAME_REGEX = /^[a-z0-9](?:[a-z0-9-]{0,28}[a-z0-9])$/;
+
 export const DEFAULT_CATEGORIES = [
   { name: "Casa", slug: "casa" },
   { name: "Ferramentas", slug: "ferramentas" },

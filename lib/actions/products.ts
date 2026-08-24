@@ -3,7 +3,8 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { prisma } from "@/lib/prisma";
-import { requireAdmin } from "@/lib/auth-utils";
+import { requireUser } from "@/lib/auth-utils";
+import type { Session } from "next-auth";
 import { slugify } from "@/lib/slug";
 import { productSchema, parseProductForm } from "@/lib/validations/product";
 
@@ -32,8 +33,23 @@ async function validatePlatform(platformId: string, requireActive: boolean) {
   return platform;
 }
 
+async function findOwnedProduct(
+  session: Session,
+  id: string
+): Promise<{ userId: string; status: "ACTIVE" | "INACTIVE"; featured: boolean } | null> {
+  const product = await prisma.product.findUnique({
+    where: { id },
+    select: { userId: true, status: true, featured: true },
+  });
+  if (!product) return null;
+  if (session.user.role !== "ADMIN" && product.userId !== session.user.id) {
+    return null;
+  }
+  return product;
+}
+
 export async function createProduct(formData: FormData): Promise<ActionResult> {
-  await requireAdmin();
+  const session = await requireUser();
 
   const input = parseProductForm(formData);
   const parsed = productSchema.safeParse(input);
@@ -63,6 +79,7 @@ export async function createProduct(formData: FormData): Promise<ActionResult> {
       price: data.price,
       categoryId: data.categoryId,
       platformId: platform.id,
+      userId: session.user.id,
       affiliateLink: data.affiliateLink,
       status: data.status,
       featured: data.featured,
@@ -72,16 +89,16 @@ export async function createProduct(formData: FormData): Promise<ActionResult> {
   });
 
   revalidatePath("/", "layout");
-  redirect("/admin/produtos");
+  redirect(`/admin/${session.user.username}/produtos`);
 }
 
 export async function updateProduct(
   id: string,
   formData: FormData
 ): Promise<ActionResult> {
-  await requireAdmin();
+  const session = await requireUser();
 
-  const existing = await prisma.product.findUnique({ where: { id } });
+  const existing = await findOwnedProduct(session, id);
   if (!existing) {
     return { error: "Produto não encontrado." };
   }
@@ -120,13 +137,13 @@ export async function updateProduct(
   });
 
   revalidatePath("/", "layout");
-  redirect("/admin/produtos");
+  redirect(`/admin/${session.user.username}/produtos`);
 }
 
 export async function toggleProductStatus(id: string) {
-  await requireAdmin();
+  const session = await requireUser();
 
-  const product = await prisma.product.findUnique({ where: { id } });
+  const product = await findOwnedProduct(session, id);
   if (!product) return;
 
   await prisma.product.update({
@@ -138,9 +155,9 @@ export async function toggleProductStatus(id: string) {
 }
 
 export async function toggleProductFeatured(id: string) {
-  await requireAdmin();
+  const session = await requireUser();
 
-  const product = await prisma.product.findUnique({ where: { id } });
+  const product = await findOwnedProduct(session, id);
   if (!product) return;
 
   await prisma.product.update({
@@ -152,7 +169,10 @@ export async function toggleProductFeatured(id: string) {
 }
 
 export async function deleteProduct(id: string) {
-  await requireAdmin();
+  const session = await requireUser();
+
+  const product = await findOwnedProduct(session, id);
+  if (!product) return;
 
   await prisma.product.delete({ where: { id } });
 

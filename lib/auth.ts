@@ -32,6 +32,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
           id: user.id,
           email: user.email,
           name: user.name ?? user.email,
+          username: user.username,
           role: user.role,
         };
       },
@@ -42,14 +43,32 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
       if (user?.id) {
         token.id = user.id;
       }
+      if (user?.username) {
+        token.username = user.username;
+      }
       if (user?.role) {
         token.role = user.role;
+      }
+
+      if (!token.username && token.id) {
+        // Tokens emitidos antes da migração não têm username: busca no banco.
+        const dbUser = await prisma.user.findUnique({
+          where: { id: token.id },
+          select: { username: true, role: true },
+        });
+        if (dbUser) {
+          token.username = dbUser.username;
+          token.role = dbUser.role;
+        }
       }
       return token;
     },
     async session({ session, token }) {
       if (token.id) {
         session.user.id = token.id as string;
+      }
+      if (token.username) {
+        session.user.username = token.username as string;
       }
       if (token.role) {
         session.user.role = token.role as "ADMIN";

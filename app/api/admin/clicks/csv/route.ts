@@ -35,7 +35,7 @@ function csvCell(value: unknown): string {
 
 export async function GET(request: NextRequest) {
   const session = await auth();
-  if (!session?.user || session.user.role !== "ADMIN") {
+  if (!session?.user) {
     return NextResponse.json({ error: "Não autorizado" }, { status: 401 });
   }
 
@@ -50,6 +50,7 @@ export async function GET(request: NextRequest) {
     sort: sp.get("sort") === "asc" ? "asc" : "desc",
     page: 1,
     pageSize: 100000,
+    userId: session.user.role === "ADMIN" ? null : session.user.id,
   };
 
   const { rows } = await getClickHistory(filters);

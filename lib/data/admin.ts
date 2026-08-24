@@ -2,8 +2,11 @@ import { prisma } from "@/lib/prisma";
 import type { Prisma } from "@/app/generated/prisma/client";
 import { DIRECT_SOURCE } from "@/lib/constants";
 
-export async function getDashboardStats() {
+export async function getDashboardStats(userId?: string | null) {
   const weekAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
+
+  const productScope = userId ? { userId } : {};
+  const clickScope = userId ? { product: { userId } } : {};
 
   const [
     totalProducts,
@@ -15,25 +18,39 @@ export async function getDashboardStats() {
     clicksBySource,
     recentClicks,
   ] = await Promise.all([
-    prisma.product.count(),
-    prisma.product.count({ where: { status: "ACTIVE" } }),
-    prisma.product.count({ where: { status: "ACTIVE", featured: true } }),
-    prisma.click.count(),
-    prisma.click.count({ where: { createdAt: { gte: weekAgo } } }),
+    prisma.product.count({ where: productScope }),
+    prisma.product.count({ where: { status: "ACTIVE", ...productScope } }),
+    prisma.product.count({
+      where: { status: "ACTIVE", featured: true, ...productScope },
+    }),
+    prisma.click.count({ where: clickScope }),
+    prisma.click.count({ where: { createdAt: { gte: weekAgo }, ...clickScope } }),
     prisma.click.groupBy({
+      where: clickScope,
       by: ["platform"],
       _count: { _all: true },
       orderBy: { _count: { platform: "desc" } },
     }),
     prisma.click.groupBy({
+      where: clickScope,
       by: ["source"],
       _count: { _all: true },
       orderBy: { _count: { source: "desc" } },
     }),
     prisma.click.findMany({
+      where: clickScope,
       orderBy: { createdAt: "desc" },
       take: 10,
-      include: { product: { select: { id: true, title: true, slug: true } } },
+      include: {
+        product: {
+          select: {
+            id: true,
+            title: true,
+            slug: true,
+            user: { select: { name: true, username: true } },
+          },
+        },
+      },
     }),
   ]);
 
@@ -49,12 +66,59 @@ export async function getDashboardStats() {
   };
 }
 
-export async function getAdminProducts() {
+export interface PerUserSummary {
+  id: string;
+  name: string | null;
+  username: string;
+  email: string;
+  role: "ADMIN" | "USER";
+  totalProducts: number;
+  activeProducts: number;
+}
+
+export async function getPerUserSummaries(): Promise<PerUserSummary[]> {
+  const [users, activeByUser] = await Promise.all([
+    prisma.user.findMany({
+      orderBy: [{ role: "asc" }, { name: "asc" }],
+      select: {
+        id: true,
+        name: true,
+        username: true,
+        email: true,
+        role: true,
+        _count: { select: { products: true } },
+      },
+    }),
+    prisma.product.groupBy({
+      by: ["userId"],
+      where: { status: "ACTIVE" },
+      _count: { _all: true },
+    }),
+  ]);
+
+  const activeMap = new Map(
+    activeByUser.map((row) => [row.userId, row._count._all])
+  );
+
+  return users.map((user) => ({
+    id: user.id,
+    name: user.name,
+    username: user.username,
+    email: user.email,
+    role: user.role,
+    totalProducts: user._count.products,
+    activeProducts: activeMap.get(user.id) ?? 0,
+  }));
+}
+
+export async function getAdminProducts(userId?: string | null) {
   return prisma.product.findMany({
+    where: userId ? { userId } : {},
     orderBy: { createdAt: "desc" },
     include: {
       category: { select: { id: true, name: true, slug: true } },
       platform: { select: { id: true, name: true, slug: true, badgeKey: true } },
+      user: { select: { id: true, name: true, username: true } },
       _count: { select: { clicks: true } },
     },
   });
@@ -111,10 +175,15 @@ export interface ClickFilters {
   sort?: "asc" | "desc";
   page?: number;
   pageSize?: number;
+  userId?: string | null;
 }
 
 function buildClickWhere(f: ClickFilters): Prisma.ClickWhereInput {
   const where: Prisma.ClickWhereInput = {};
+
+  if (f.userId) {
+    where.product = { userId: f.userId };
+  }
 
   if (f.source === DIRECT_SOURCE) {
     where.source = null;

@@ -7,7 +7,7 @@ export const dynamic = "force-dynamic"
 
 export async function POST(request: Request) {
   const session = await auth()
-  if (!session?.user || session.user.role !== "ADMIN") {
+  if (!session?.user) {
     return NextResponse.json({ error: "Não autorizado" }, { status: 401 })
   }
 

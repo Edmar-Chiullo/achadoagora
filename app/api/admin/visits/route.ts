@@ -17,8 +17,14 @@ function intParam(
 
 export async function GET(request: NextRequest) {
   const session = await auth();
-  if (!session?.user || session.user.role !== "ADMIN") {
+  if (!session?.user) {
     return NextResponse.json({ error: "Não autorizado" }, { status: 401 });
+  }
+  if (session.user.role !== "ADMIN") {
+    return NextResponse.json(
+      { error: "Acesso restrito ao administrador." },
+      { status: 403 }
+    );
   }
 
   const sp = request.nextUrl.searchParams;

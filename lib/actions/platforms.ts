@@ -3,7 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { prisma } from "@/lib/prisma";
-import { requireAdmin } from "@/lib/auth-utils";
+import { requireUser } from "@/lib/auth-utils";
 import { slugify } from "@/lib/slug";
 import { platformSchema, parsePlatformForm } from "@/lib/validations/platform";
 import type { ActionResult } from "@/lib/actions/products";
@@ -22,7 +22,7 @@ async function uniquePlatformSlug(base: string, excludeId?: string) {
 }
 
 export async function createPlatform(formData: FormData): Promise<ActionResult> {
-  await requireAdmin();
+  const session = await requireUser();
 
   const parsed = platformSchema.safeParse(parsePlatformForm(formData));
   if (!parsed.success) {
@@ -46,14 +46,14 @@ export async function createPlatform(formData: FormData): Promise<ActionResult> 
   });
 
   revalidatePath("/", "layout");
-  redirect("/admin/plataformas");
+  redirect(`/admin/${session.user.username}/plataformas`);
 }
 
 export async function updatePlatform(
   id: string,
   formData: FormData
 ): Promise<ActionResult> {
-  await requireAdmin();
+  const session = await requireUser();
 
   const existing = await prisma.platform.findUnique({ where: { id } });
   if (!existing) {
@@ -83,11 +83,11 @@ export async function updatePlatform(
   });
 
   revalidatePath("/", "layout");
-  redirect("/admin/plataformas");
+  redirect(`/admin/${session.user.username}/plataformas`);
 }
 
 export async function togglePlatformStatus(id: string) {
-  await requireAdmin();
+  await requireUser();
 
   const platform = await prisma.platform.findUnique({ where: { id } });
   if (!platform) return;
@@ -101,7 +101,7 @@ export async function togglePlatformStatus(id: string) {
 }
 
 export async function deletePlatform(id: string) {
-  await requireAdmin();
+  await requireUser();
 
   const platform = await prisma.platform.findUnique({
     where: { id },

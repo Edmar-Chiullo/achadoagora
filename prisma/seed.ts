@@ -127,19 +127,24 @@ async function main() {
 
   const adminEmail = process.env.ADMIN_EMAIL || "admin@achadinhos.com.br";
   const adminPassword = process.env.ADMIN_PASSWORD || "admin123";
+  const adminUsername = process.env.ADMIN_USERNAME || "admin";
 
   const passwordHash = await bcrypt.hash(adminPassword, 12);
 
   const user = await prisma.user.upsert({
     where: { email: adminEmail },
-    update: {},
+    update: { username: adminUsername },
     create: {
       email: adminEmail,
+      username: adminUsername,
       name: "Administrador",
       password: passwordHash,
+      role: "ADMIN",
     },
   });
-  console.log(`✓ Usuário administrador: ${user.email} (senha: ${adminPassword})`);
+  console.log(
+    `✓ Usuário administrador: ${user.email} (/admin/${user.username}, senha: ${adminPassword})`
+  );
 
   for (const category of DEFAULT_CATEGORIES) {
     const created = await prisma.category.upsert({
@@ -193,6 +198,7 @@ async function main() {
         price: sample.price,
         categoryId: category?.id ?? null,
         platformId: platform?.id ?? "",
+        userId: user.id,
         affiliateLink: sample.affiliateLink,
         status: "ACTIVE",
         featured: sample.featured,

@@ -9,6 +9,7 @@ datasource db {
 
 enum Role {
   ADMIN
+  USER
 }
 
 enum Status {
@@ -44,13 +45,15 @@ model Platform {
 }
 
 model User {
-  id        String   @id @default(cuid())
-  email     String   @unique
+  id        String    @id @default(cuid())
+  email     String    @unique
+  username  String    @unique
   name      String?
   password  String
-  role      Role     @default(ADMIN)
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  role      Role      @default(USER)
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  products  Product[]
 
   @@map("users")
 }
@@ -80,6 +83,8 @@ model Product {
   category      Category?  @relation(fields: [categoryId], references: [id], onDelete: SetNull)
   platformId    String
   platform      Platform   @relation(fields: [platformId], references: [id], onDelete: Restrict)
+  userId        String
+  user          User       @relation(fields: [userId], references: [id], onDelete: Cascade)
   affiliateLink String
   status        Status     @default(ACTIVE)
   featured      Boolean    @default(false)
@@ -93,6 +98,7 @@ model Product {
   @@index([categoryId])
   @@index([platformId])
   @@index([sourceType])
+  @@index([userId])
   @@map("products")
 }
 

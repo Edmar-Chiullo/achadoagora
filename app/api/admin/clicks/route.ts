@@ -17,7 +17,7 @@ function intParam(
 
 export async function GET(request: NextRequest) {
   const session = await auth();
-  if (!session?.user || session.user.role !== "ADMIN") {
+  if (!session?.user) {
     return NextResponse.json({ error: "Não autorizado" }, { status: 401 });
   }
 
@@ -32,6 +32,7 @@ export async function GET(request: NextRequest) {
     sort: sp.get("sort") === "asc" ? ("asc" as const) : ("desc" as const),
     page: intParam(sp.get("page"), 1, 1, 100000),
     pageSize: intParam(sp.get("pageSize"), 20, 1, 100),
+    userId: session.user.role === "ADMIN" ? null : session.user.id,
   };
 
   const [history, stats] = await Promise.all([

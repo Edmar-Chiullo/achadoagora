@@ -36,7 +36,7 @@ function LoginForm() {
 
     const callbackUrl =
       new URLSearchParams(window.location.search).get("callbackUrl") ??
-      "/admin/dashboard";
+      "/admin";
     router.push(callbackUrl);
     router.refresh();
   }
